@@ -41,6 +41,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3847468486123867527}
   - component: {fileID: 6458162888745410620}
+  - component: {fileID: 8828027756890713819}
   m_Layer: 3
   m_Name: Nigiri_Sake_Free
   m_TagString: Untagged
@@ -85,6 +86,18 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.07, y: 0.06327188, z: 0.13574632}
   m_Center: {x: 0.00038471445, y: 0.034927875, z: 0.00025361776}
+--- !u!114 &8828027756890713819
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4449700313103077667}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 84ef97b3b52593d4a9f32617fca12ff7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &6103948328851189318
 PrefabInstance:
   m_ObjectHideFlags: 0

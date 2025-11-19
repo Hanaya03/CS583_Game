@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7173879942964199283}
   - component: {fileID: 2324824262384554362}
+  - component: {fileID: 1606906637400136444}
   m_Layer: 3
   m_Name: Maki_01_Free
   m_TagString: Untagged
@@ -54,6 +55,18 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.07934285, y: 0.05445863, z: 0.081908844}
   m_Center: {x: 0.0017489046, y: 0.019846128, z: 0.0008691661}
+--- !u!114 &1606906637400136444
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8719103450520372909}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 84ef97b3b52593d4a9f32617fca12ff7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &7382143029990107706
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -10,10 +10,13 @@ public class Poisoning : BTurnItem
     
     public override void OnLeftClick()
     {
+        Debug.Log("INPUT");
         if(_data.SelectedGO == null)
             return;
 
+        Debug.Log("GO has been selected");
         _data.SelectedItm = _data.Sboard.GetItem(_data.SelectedGO.name);
+        _data.SelectedItm.PoisonItem();
     }
     public override void EnterState(){}
     public override void ExitState(){}
