@@ -30,3 +30,7 @@ Audrey CdeBaca
 
 Gilbert Venegas
 
+Tasks:
+
+Hector
+  Player controller, sushi poisoning/eating. Player animations and sfx. Sushi animations and sfx.
