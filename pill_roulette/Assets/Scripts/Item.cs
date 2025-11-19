@@ -21,6 +21,10 @@ public class Item : MonoBehaviour
     public void PoisonItem()
     {
         _poisoned = true;
-        Debug.Log("IM POISONED");
+    }
+
+    public void EatItem()
+    {
+        Object.Destroy(this.gameObject);
     }
 }

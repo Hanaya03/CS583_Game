@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class StateData
 {
+    private int _health = 1;
+    public int Health{get{return _health;} set{_health = value;}}
     private Ray ray;
     public Ray RAY{set{ray = value;} get{return ray;}}
     private GameObject _selectedGO;
