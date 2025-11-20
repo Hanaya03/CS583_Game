@@ -18,11 +18,17 @@ public class Item : MonoBehaviour
         
     }
 
+    /*
+    * public function that sets the poisoned boolean of this gameobject.
+    */
     public void PoisonItem()
     {
         _poisoned = true;
     }
 
+    /*
+    * public function that destroys this GameObject.
+    */
     public void EatItem()
     {
         Object.Destroy(this.gameObject);

@@ -1,6 +1,10 @@
 using UnityEngine;
 using System;
 
+/*
+* Poisoning class that handles the selection of a sushi GameObject for poisoning 
+* then transitions to eating state
+*/
 public class Poisoning : BTurnItem
 {
     public Poisoning(ETurnItems stateKey, StateData Data) : base(stateKey, Data)
@@ -8,6 +12,11 @@ public class Poisoning : BTurnItem
         // _data = Data;
     }
     
+    /*
+    * Called when player hits left click
+    * if they're hovering over a sushi, grab that sushi GameObject's Item script from the SushiBoard class, 
+    * then poison it. set next state to eating.
+    */
     public override void OnLeftClick()
     {
         if(_data.SelectedGO == null)
@@ -20,6 +29,11 @@ public class Poisoning : BTurnItem
     
     public override void EnterState(){}
     public override void ExitState(){}
+
+    /*
+    * Called every update
+    * Find the Sushi GameObject that player's mouse is hovering over
+    */
     public override void UpdateState()
     {
         _data.RAY = Camera.main.ScreenPointToRay(Input.mousePosition);

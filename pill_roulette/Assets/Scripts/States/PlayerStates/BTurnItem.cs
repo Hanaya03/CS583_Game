@@ -1,6 +1,9 @@
 using UnityEngine;
 using System;
 
+/*
+* Base state class for the player states
+*/
 public abstract class BTurnItem
 {
     protected RaycastHit hit;

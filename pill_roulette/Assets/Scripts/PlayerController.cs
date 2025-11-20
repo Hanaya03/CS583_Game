@@ -8,6 +8,10 @@ public enum ETurnItems
     Eating
 }
 
+/*
+* Player state machine that handled poisoning and eating logic.
+*/
+
 public class PlayerController : MonoBehaviour
 {
     private StateData _data;
