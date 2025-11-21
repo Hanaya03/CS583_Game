@@ -10,14 +10,14 @@ public class Poisoning : BTurnItem
     
     public override void OnLeftClick()
     {
+        Debug.Log("INPUT");
         if(_data.SelectedGO == null)
             return;
 
+        Debug.Log("GO has been selected");
         _data.SelectedItm = _data.Sboard.GetItem(_data.SelectedGO.name);
         _data.SelectedItm.PoisonItem();
-        _nextState = ETurnItems.Eating;
     }
-    
     public override void EnterState(){}
     public override void ExitState(){}
     public override void UpdateState()
@@ -26,6 +26,7 @@ public class Poisoning : BTurnItem
         if (Physics.Raycast(_data.RAY, out hit, Mathf.Infinity, _data.ItemLayer))
         {
             _data.SelectedGO = hit.transform.gameObject;
+            Debug.Log($"current gameobject {_data.SelectedGO.name}");
         }
         else
         {

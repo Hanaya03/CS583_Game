@@ -1,11 +1,7 @@
 using UnityEngine;
 
-public class Item : MonoBehaviour
+public class EnemyController : MonoBehaviour
 {
-    private bool _poisoned = false;
-    public bool IsPoisoned => _poisoned;
-
-
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -16,11 +12,5 @@ public class Item : MonoBehaviour
     void Update()
     {
         
-    }
-
-    public void PoisonItem()
-    {
-        _poisoned = true;
-        Debug.Log("IM POISONED");
     }
 }
