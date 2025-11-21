@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
+using UnityEngine.UI;
 
 public enum ETurnItems
 {
@@ -26,9 +27,58 @@ public class PlayerController : MonoBehaviour
     private Dictionary<ETurnItems, BTurnItem> _states= new Dictionary<ETurnItems, BTurnItem>();
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
+
+    //Mouse look variables
+    [SerializeField] public Camera playerCamera;
+    [SerializeField] public float lookSensitivity = 2f;
+    [SerializeField] public float lookXLimit = 45f;
+    CharacterController controller;
+    private float _pitch;
+
+    //Crosshair Variables
+    [SerializeField] public Image crosshair;
+    [SerializeField] public float crosshairSize = 6f;
+
     void Start()
     {
-        
+        controller = GetComponent<CharacterController>();
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+        //I'm doing all this to hide the cursor and lock it to the center of the screen
+        //When we add menus, we'll need to set Cursor.lockState = CursorLockMode.None; and 
+        //  Cursor.visible = true; so that we can 
+        //see the cursor and move it around the menu screens.
+
+        EnsureCrosshair();
+
+    }
+
+    private void EnsureCrosshair()
+    {
+        if (crosshair != null)
+        {
+            PositionCrosshairCenter();
+            return;
+        }
+        var canvasGO = new GameObject("CrosshairCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+        var canvas = canvasGO.GetComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+
+         var imgGO = new GameObject("Crosshair", typeof(RectTransform), typeof(Image));
+        imgGO.transform.SetParent(canvasGO.transform, false);
+
+        crosshair = imgGO.GetComponent<Image>();
+        crosshair.color = Color.white;
+
+        PositionCrosshairCenter();
+    }
+
+    private void PositionCrosshairCenter()
+    {
+        var rt = crosshair.rectTransform;
+        rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.anchoredPosition = Vector2.zero;
+        rt.sizeDelta = new Vector2(crosshairSize, crosshairSize);
     }
 
     // Update is called once per frame
@@ -44,6 +94,28 @@ public class PlayerController : MonoBehaviour
         {
             TransitionToState(_nextStateKey);
         }    
+
+
+        //Mouse logic
+        
+        if (playerCamera != null && UnityEngine.InputSystem.Mouse.current != null)
+        {
+            //this is raw mouse delta
+            Vector2 deltapos = UnityEngine.InputSystem.Mouse.current.delta.ReadValue();
+            
+            //Lets us change the sensitivity of the mouse
+            float mouseX = deltapos.x * lookSensitivity;
+            float mouseY = deltapos.y * lookSensitivity;
+
+            //left n right
+            transform.Rotate(0f, mouseX, 0f);
+
+            _pitch -= mouseY;
+            _pitch = Mathf.Clamp(_pitch, -lookXLimit, lookXLimit);
+
+            playerCamera.transform.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
+        }
+
     }
     
     private void TransitionToState(ETurnItems Statekey){
