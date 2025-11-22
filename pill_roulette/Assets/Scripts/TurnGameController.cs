@@ -12,9 +12,8 @@ public class TurnGameController : MonoBehaviour
     [SerializeField] private List<Cup> cups;     // assign 3 cups in inspector
 
     [Header("Heights (reference values)")]
-    [SerializeField] private float startY  = 0.703f;       // only used to compute drop offset
-    [SerializeField] private float revealY = 0.3242173f;   // only used to compute drop offset
-    // NEW: how far to drop relative to each cup's local start Y
+    [SerializeField] private float startY  = 0.703f;       // reference to compute the drop amount
+    [SerializeField] private float revealY = 0.3242173f;   // reference to compute the drop amount
     private float DropOffset => startY - revealY;          // ≈ 0.3787827f
 
     [Header("Timings")]
@@ -25,18 +24,24 @@ public class TurnGameController : MonoBehaviour
 
     [Header("Gameplay")]
     [SerializeField] private int playerHearts = 3;
+    [SerializeField] private int npcHearts    = 3;
 
     private Cup poisonedCup;
     private bool playerTurn;
     private bool canClick;
     private bool gameOver;
 
-    // NEW: remember each cup’s starting LOCAL Y (don’t force world Y)
+    // remember each cup’s starting LOCAL Y (don’t force world Y)
     private Dictionary<Cup, float> startLocalY = new Dictionary<Cup, float>();
+
+    private void Awake()
+    {
+        // Fallback if you forgot to drag the camera
+        if (playerCamera == null) playerCamera = Camera.main;
+    }
 
     private void Start()
     {
-        // Auto-fill cups if list is empty
         if (cups == null || cups.Count == 0)
             cups = new List<Cup>(FindObjectsOfType<Cup>());
 
@@ -46,7 +51,7 @@ public class TurnGameController : MonoBehaviour
             enabled = false; return;
         }
 
-        // Record each cup's current LOCAL Y and clear tint
+        // Cache start local Y and ensure visuals cleared
         startLocalY.Clear();
         foreach (var c in cups)
         {
@@ -55,50 +60,67 @@ public class TurnGameController : MonoBehaviour
                 Debug.LogError($"Cup '{c?.name}' missing or SushiUnderCup not set.");
                 enabled = false; return;
             }
-            c.SetPoisonVisual(false);
             startLocalY[c] = c.transform.localPosition.y;
+            c.SetPoisonVisual(false);
+            c.SushiUnderCup.ClearPoison();
+            c.SushiUnderCup.gameObject.SetActive(true); // ensure visible for the round
+            c.gameObject.SetActive(true);               // cups stay active across rounds
         }
 
-        // Pick and mark poisoned cup (logic only)
-        poisonedCup = cups[Random.Range(0, cups.Count)];
-        poisonedCup.SushiUnderCup.Poison();
-        poisonedCup.SetPoisonVisual(true); // show red only during intro
-
-        StartCoroutine(InitialReveal());
+        // Launch first round
+        StartCoroutine(SetupNewRound());
     }
 
-    private IEnumerator InitialReveal()
+    private IEnumerator SetupNewRound()
     {
+        if (gameOver) yield break;
+
+        // Reset all sushi for the new round
+        foreach (var c in cups)
+        {
+            c.SushiUnderCup.ClearPoison();
+            c.SushiUnderCup.gameObject.SetActive(true);
+            c.SetPoisonVisual(false);
+
+            // snap cups to their start local Y (don’t move sushi)
+            var lp = c.transform.localPosition;
+            c.transform.localPosition = new Vector3(lp.x, startLocalY[c], lp.z);
+        }
+
+        // Choose one poisoned
+        poisonedCup = cups[Random.Range(0, cups.Count)];
+        poisonedCup.SushiUnderCup.Poison();
+
+        // Show red only at the start reveal
+        poisonedCup.SetPoisonVisual(true);
+
+        // Initial reveal (only the poisoned cup moves)
         float yStart  = startLocalY[poisonedCup];
         float yReveal = yStart - DropOffset;
 
-        // lower only the poisoned cup
-        yield return poisonedCup.StartCoroutine(
-            poisonedCup.MoveLocalY(yStart, yReveal, dropDuration, moveCurve)
-        );
-
+        yield return poisonedCup.StartCoroutine(poisonedCup.MoveLocalY(yStart, yReveal, dropDuration, moveCurve));
         yield return new WaitForSeconds(holdReveal);
+        yield return poisonedCup.StartCoroutine(poisonedCup.MoveLocalY(yReveal, yStart, raiseDuration, moveCurve));
 
-        // raise it back up
-        yield return poisonedCup.StartCoroutine(
-            poisonedCup.MoveLocalY(yReveal, yStart, raiseDuration, moveCurve)
-        );
-
-        // hide the red after the intro (if you want it only at start)
+        // Hide the red for the actual gameplay
         poisonedCup.SetPoisonVisual(false);
 
+        // Player starts each round
         playerTurn = true;
         canClick   = true;
+
+        Debug.Log($"[ROUND START] PlayerHearts={playerHearts}  NPCHearts={npcHearts}");
     }
 
     private void Update()
     {
         if (gameOver || !playerTurn || !canClick) return;
 
+        // New Input System
         if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
             TryPickAtCenter();
 
-        // Old input system alternative:
+        // Old Input alternative:
         // if (Input.GetMouseButtonDown(0)) TryPickAtCenter();
     }
 
@@ -110,7 +132,7 @@ public class TurnGameController : MonoBehaviour
         if (Physics.Raycast(ray, out var hit, 100f, cupLayer))
         {
             Cup cup = hit.collider.GetComponentInParent<Cup>();
-            if (cup != null && cup.gameObject.activeSelf)
+            if (cup != null && cup.gameObject.activeSelf && cup.SushiUnderCup.gameObject.activeSelf)
             {
                 canClick = false;
                 StartCoroutine(PlayerRevealsAndEats(cup));
@@ -123,83 +145,109 @@ public class TurnGameController : MonoBehaviour
         float yStart  = startLocalY[cup];
         float yReveal = yStart - DropOffset;
 
-        yield return cup.StartCoroutine(
-            cup.MoveLocalY(yStart, yReveal, dropDuration, moveCurve)
-        );
+        // Reveal player’s pick
+        yield return cup.StartCoroutine(cup.MoveLocalY(yStart, yReveal, dropDuration, moveCurve));
 
-        var sushi = cup.SushiUnderCup;
-        bool poisoned = sushi != null && sushi.IsPoisoned;
-
-        sushi?.Eat();
-        cup.gameObject.SetActive(false);
+        bool poisoned = cup.SushiUnderCup.IsPoisoned;
+        cup.SushiUnderCup.Eat();    // remove sushi
+        // Keep the cup active; only sushi disappears
 
         if (poisoned)
         {
             playerHearts--;
+            Debug.Log($"<color=orange>Player ate POISON. Hearts left: {playerHearts}</color>");
+
             if (playerHearts <= 0)
             {
                 gameOver = true;
-                Debug.Log("<color=red>Player ate poison. Game Over.</color>");
+                Debug.Log("<color=red>Player died. Game Over.</color>");
                 yield break;
             }
-        }
 
-        var remaining = GetRemainingCups();
-        if (remaining.Count == 0)
-        {
-            gameOver = true;
-            Debug.Log(poisoned
-                ? $"<color=yellow>All sushi eaten. You ate the poisoned one but survived. Hearts left: {playerHearts}</color>"
-                : "<color=green>All sushi eaten safely! You win!</color>");
+            // Round ends because poison was eaten → start next round
+            yield return new WaitForSeconds(0.6f);
+            yield return SetupNewRound();
             yield break;
         }
 
+        // If no sushi left (all safe), start next round
+        if (AllSushiGone())
+        {
+            Debug.Log("<color=green>All sushi were safe this round.</color>");
+            yield return new WaitForSeconds(0.6f);
+            yield return SetupNewRound();
+            yield break;
+        }
+
+        // NPC turn
         playerTurn = false;
         yield return new WaitForSeconds(0.6f);
-        yield return NPCTurn(remaining);
+        yield return NPCTurn();
     }
 
-    private IEnumerator NPCTurn(List<Cup> remaining)
+    private IEnumerator NPCTurn()
     {
+        // Collect remaining sushi (still active)
+        List<Cup> remaining = new List<Cup>();
+        foreach (var c in cups)
+            if (c.SushiUnderCup.gameObject.activeSelf)
+                remaining.Add(c);
+
+        if (remaining.Count == 0)
+        {
+            Debug.Log("<color=green>All sushi were safe this round (before NPC turn).</color>");
+            yield return SetupNewRound();
+            yield break;
+        }
+
+        // NPC random pick among remaining
         Cup choice = remaining[Random.Range(0, remaining.Count)];
 
         float yStart  = startLocalY[choice];
         float yReveal = yStart - DropOffset;
 
-        yield return choice.StartCoroutine(
-            choice.MoveLocalY(yStart, yReveal, dropDuration, moveCurve)
-        );
+        yield return choice.StartCoroutine(choice.MoveLocalY(yStart, yReveal, dropDuration, moveCurve));
 
         bool poisoned = choice.SushiUnderCup.IsPoisoned;
-
         choice.SushiUnderCup.Eat();
-        choice.gameObject.SetActive(false);
 
         if (poisoned)
         {
-            gameOver = true;
-            Debug.Log("<color=cyan>NPC ate poison. You WIN!</color>");
+            npcHearts--;
+            Debug.Log($"<color=cyan>NPC ate POISON. NPC hearts left: {npcHearts}</color>");
+
+            if (npcHearts <= 0)
+            {
+                gameOver = true;
+                Debug.Log("<color=cyan>NPC died. YOU WIN!</color>");
+                yield break;
+            }
+
+            // Round ends because poison was eaten → start next round
+            yield return new WaitForSeconds(0.6f);
+            yield return SetupNewRound();
             yield break;
         }
 
-        remaining = GetRemainingCups();
-        if (remaining.Count == 0)
+        // If no sushi left, next round
+        if (AllSushiGone())
         {
-            gameOver = true;
-            Debug.Log("<color=green>All sushi eaten safely! You win!</color>");
+            Debug.Log("<color=green>All sushi were safe this round.</color>");
+            yield return new WaitForSeconds(0.6f);
+            yield return SetupNewRound();
             yield break;
         }
 
+        // Back to player
         playerTurn = true;
         canClick   = true;
     }
 
-    private List<Cup> GetRemainingCups()
+    private bool AllSushiGone()
     {
-        var rem = new List<Cup>();
         foreach (var c in cups)
-            if (c != null && c.gameObject.activeSelf)
-                rem.Add(c);
-        return rem;
+            if (c.SushiUnderCup.gameObject.activeSelf)
+                return false;
+        return true;
     }
 }
