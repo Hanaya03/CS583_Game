@@ -10,13 +10,13 @@ Pill Roulette
 
 
 
-Pill roulette is a first person horror game who takes heavy inspiration from it's namesake, Buck Shot Roulette. As the game currently stands, we have plans of replacing the 'pill' part of the game with cakes and other confectionaries to be a little more pg.
+Pill roulette is a first person horror game who takes heavy inspiration from Buck Shot Roulette. As the game currently stands, we have plans of replacing the 'pill' part of the game with cakes and other confectionaries to be a little more pg.
 
 
 
 Description of Game Target:
 
-Primary gameplay loop consists of the player and the AI controlled opponent taking turns selecting a number of cakes to poison in the center of the table at which they sit. Upon both characters poisoning cakes, they then take turns eating one of the many cakes. If they're misfortune finds them eating a poisoned cake, the game ends immediately with the other side taking the win. If time allows, we will implement more features.
+Primary gameplay loop consists of the player and the opponent(currently no physical model) being presented 3 sushis, one of which is poisoned. The player and the opponent will go back and forth selecting sushis to eat, until one them eats the poisoned sushi. The first one to eat 3 poisoned sushis dies and the player wins if they survive.
 
 
 
