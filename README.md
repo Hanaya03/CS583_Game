@@ -32,5 +32,5 @@ Gilbert Venegas
 
 Tasks:
 
-Hector
-  Player controller, sushi poisoning/eating. Player animations and sfx. Sushi animations and sfx.
+Hector: Player controller, sushi poisoning/eating. Player animations and sfx. Sushi animations and sfx.
+Ignacio: First Room (Menu) and decorations. Scene manager from menu to asylum room.
