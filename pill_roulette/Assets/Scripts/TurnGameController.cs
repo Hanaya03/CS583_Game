@@ -13,26 +13,35 @@ public class TurnGameController : MonoBehaviour
 
     [Header("Heights (reference values)")]
     [SerializeField] private float startY  = 0.703f;       // reference to compute the drop amount
+    public float STARTY => startY;
     [SerializeField] private float revealY = 0.3242173f;   // reference to compute the drop amount
+    public float REVEALY => revealY;
     private float DropOffset => startY - revealY;          // ≈ 0.3787827f
+    public float DROPOFFSET => DropOffset;
 
     [Header("Timings")]
     [SerializeField] private float dropDuration = 0.35f;
+    public float DROPDURAION => dropDuration;
     [SerializeField] private float holdReveal  = 0.6f;
+    public float HOLDREVEAL => holdReveal;
     [SerializeField] private float raiseDuration = 0.35f;
+    public float RAISEDURATION => raiseDuration;
     [SerializeField] private AnimationCurve moveCurve = AnimationCurve.EaseInOut(0,0,1,1);
+    public AnimationCurve MOVECURVE => moveCurve;
 
     [Header("Gameplay")]
     [SerializeField] private int playerHearts = 3;
-    [SerializeField] private int npcHearts    = 3;
+    [SerializeField] private EnemyController _npc;
 
     private Cup poisonedCup;
     private bool playerTurn;
     private bool canClick;
     private bool gameOver;
+    public bool GameOver{get{return gameOver;} set{gameOver = value;}}
 
     // remember each cup’s starting LOCAL Y (don’t force world Y)
     private Dictionary<Cup, float> startLocalY = new Dictionary<Cup, float>();
+    public Dictionary<Cup, float> STARTLOCALY => startLocalY;
 
     private void Awake()
     {
@@ -71,7 +80,7 @@ public class TurnGameController : MonoBehaviour
         StartCoroutine(SetupNewRound());
     }
 
-    private IEnumerator SetupNewRound()
+    public IEnumerator SetupNewRound()
     {
         if (gameOver) yield break;
 
@@ -109,7 +118,7 @@ public class TurnGameController : MonoBehaviour
         playerTurn = true;
         canClick   = true;
 
-        Debug.Log($"[ROUND START] PlayerHearts={playerHearts}  NPCHearts={npcHearts}");
+        Debug.Log($"[ROUND START] PlayerHearts={playerHearts}  NPCHearts={_npc.npcHearts}");
     }
 
     private void Update()
@@ -182,52 +191,7 @@ public class TurnGameController : MonoBehaviour
         // NPC turn
         playerTurn = false;
         yield return new WaitForSeconds(0.6f);
-        yield return NPCTurn();
-    }
-
-    private IEnumerator NPCTurn()
-    {
-        // Collect remaining sushi (still active)
-        List<Cup> remaining = new List<Cup>();
-        foreach (var c in cups)
-            if (c.SushiUnderCup.gameObject.activeSelf)
-                remaining.Add(c);
-
-        if (remaining.Count == 0)
-        {
-            Debug.Log("<color=green>All sushi were safe this round (before NPC turn).</color>");
-            yield return SetupNewRound();
-            yield break;
-        }
-
-        // NPC random pick among remaining
-        Cup choice = remaining[Random.Range(0, remaining.Count)];
-
-        float yStart  = startLocalY[choice];
-        float yReveal = yStart - DropOffset;
-
-        yield return choice.StartCoroutine(choice.MoveLocalY(yStart, yReveal, dropDuration, moveCurve));
-
-        bool poisoned = choice.SushiUnderCup.IsPoisoned;
-        choice.SushiUnderCup.Eat();
-
-        if (poisoned)
-        {
-            npcHearts--;
-            Debug.Log($"<color=cyan>NPC ate POISON. NPC hearts left: {npcHearts}</color>");
-
-            if (npcHearts <= 0)
-            {
-                gameOver = true;
-                Debug.Log("<color=cyan>NPC died. YOU WIN!</color>");
-                yield break;
-            }
-
-            // Round ends because poison was eaten → start next round
-            yield return new WaitForSeconds(0.6f);
-            yield return SetupNewRound();
-            yield break;
-        }
+        yield return _npc.TakeTurn(cups);
 
         // If no sushi left, next round
         if (AllSushiGone())
