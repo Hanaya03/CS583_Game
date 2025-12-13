@@ -6,12 +6,18 @@ public class EnemyController : MonoBehaviour
 {
     [SerializeField] private Animator _animator;
     [SerializeField] private TurnGameController _gameManager;
+    [SerializeField] private HeartUI enemyHeartUI;
+    
     private int _health = 3;
     public int npcHearts => _health;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         _animator.SetBool("Idle", true);
+        if (enemyHeartUI != null)
+        {
+            enemyHeartUI.SetHearts(_health);
+        }
     }
 
     // Update is called once per frame
@@ -58,6 +64,12 @@ public class EnemyController : MonoBehaviour
         if (poisoned)
         {
             _health--;
+            
+            if (enemyHeartUI != null)
+            {
+                enemyHeartUI.SetHearts(_health);
+            }
+
             Debug.Log($"<color=cyan>NPC ate POISON. NPC hearts left: {_health}</color>");
 
             if (_health <= 0)

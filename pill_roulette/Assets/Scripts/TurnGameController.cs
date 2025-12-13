@@ -35,6 +35,11 @@ public class TurnGameController : MonoBehaviour
     [SerializeField] private int playerHearts = 3;
     [SerializeField] private EnemyController _npc;
 
+    //adding players hearts and npc hearts to the UI
+    [Header("Gameplay")]
+    [SerializeField] private HeartUI heartUI;   
+
+
     private Cup poisonedCup;
     private bool playerTurn;
     private bool canClick;
@@ -61,6 +66,12 @@ public class TurnGameController : MonoBehaviour
             Debug.LogError("TurnGameController: No cups found. Assign them in the Inspector.");
             enabled = false; return;
         }
+
+        if (heartUI != null)
+        {
+            heartUI.SetHearts(playerHearts);
+        }
+            
 
         // Cache start local Y and ensure visuals cleared
         startLocalY.Clear();
@@ -169,6 +180,13 @@ public class TurnGameController : MonoBehaviour
         if (poisoned)
         {
             playerHearts--;
+
+            //update the hearts
+            if (heartUI != null)
+            {
+                heartUI.SetHearts(playerHearts);
+            }
+
             Debug.Log($"<color=orange>Player ate POISON. Hearts left: {playerHearts}</color>");
 
             if (playerHearts <= 0)
