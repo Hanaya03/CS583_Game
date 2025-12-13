@@ -28,10 +28,14 @@ Ignacio Jimenez
 
 Audrey CdeBaca
 
-Gilbert Venegas
+Gilbert Venegas 
 
 Tasks:
 
 Hector: Player controller, sushi poisoning/eating. Player animations and sfx. Sushi animations and sfx.
 
 Ignacio: First Room (Menu) and decorations. Scene manager from menu to asylum room.
+
+Gilbert: Play environment, basic gameloop, Cup Movement and Shuffling Logic and Animation, Player and Enemy Heart UI, Cup Animation, Poison and eating sushi, Room Design.
+
+Audrey: Win/Lose screen.
