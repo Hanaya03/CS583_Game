@@ -5,8 +5,12 @@ using System.Collections.Generic;
 public class EnemyController : MonoBehaviour
 {
     [SerializeField] private Animator _animator;
+    [SerializeField] private AudioClip[] _audioClips;
+    [SerializeField] private AudioClip _coughClip;
+    [SerializeField] private AudioSource _audioSource;
     [SerializeField] private TurnGameController _gameManager;
     private int _health = 3;
+    private bool _isIdle = true;
     public int npcHearts => _health;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -17,7 +21,12 @@ public class EnemyController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        if (_isIdle)
+        {
+            _audioSource.clip = _audioClips[(int)Random.Range(0, 3)];
+            _audioSource.Play();
+            _isIdle = false;
+        }
     }
 
     public IEnumerator TakeTurn(List<Cup> cups)
@@ -38,10 +47,6 @@ public class EnemyController : MonoBehaviour
 
         // NPC random pick among remaining
         Cup choice = remaining[Random.Range(0, remaining.Count)];
-        while(!choice.SushiUnderCup.IsPoisoned)
-        {
-            choice = remaining[Random.Range(0, remaining.Count)];
-        }
 
         float yStart  = _gameManager.STARTLOCALY[choice];
         float yReveal = yStart - _gameManager.DROPOFFSET;
@@ -58,6 +63,8 @@ public class EnemyController : MonoBehaviour
         if (poisoned)
         {
             _health--;
+            _audioSource.clip = _coughClip;
+            _audioSource.Play();
             Debug.Log($"<color=cyan>NPC ate POISON. NPC hearts left: {_health}</color>");
 
             if (_health <= 0)
@@ -74,9 +81,12 @@ public class EnemyController : MonoBehaviour
             // Round ends because poison was eaten → start next round
             yield return new WaitForSeconds(0.6f);
             yield return _gameManager.SetupNewRound();
+            _isIdle = true;
             yield break;
         }
         TransitionToIdle();
+        yield return new WaitForSeconds(1f);
+        _isIdle = true;
     }
 
     private void TransitionToIdle()
