@@ -89,7 +89,7 @@ public class TurnGameController : MonoBehaviour
     public IEnumerator SetupNewRound()
     {
         if (gameOver){
-            yield return new WaitForSeconds(2f);
+            yield return new WaitForSeconds(1f);
             yield return Fade(0f, 1f, 1f);           
             if(playerHearts <= 0)
                 SceneManager.LoadScene("WinScene", LoadSceneMode.Single);
