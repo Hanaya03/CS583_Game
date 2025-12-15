@@ -1,12 +1,17 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
+
 // If you use the old input system, remove the next line and use Input.GetMouseButtonDown(0)
 using UnityEngine.InputSystem;
 
 public class TurnGameController : MonoBehaviour
 {
     [Header("Refs")]
+    [SerializeField] private Image fadeImage;
+    [SerializeField] private CanvasGroup fadePanel;
     [SerializeField] private Camera playerCamera;
     [SerializeField] private LayerMask cupLayer; // layer of cup colliders
     [SerializeField] private List<Cup> cups;     // assign 3 cups in inspector
@@ -28,6 +33,7 @@ public class TurnGameController : MonoBehaviour
     public float RAISEDURATION => raiseDuration;
     [SerializeField] private AnimationCurve moveCurve = AnimationCurve.EaseInOut(0,0,1,1);
     public AnimationCurve MOVECURVE => moveCurve;
+    [SerializeField] private AnimationCurve fadeCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
     [Header("Gameplay")]
     [SerializeField] private int playerHearts = 3;
@@ -82,7 +88,13 @@ public class TurnGameController : MonoBehaviour
 
     public IEnumerator SetupNewRound()
     {
-        if (gameOver) yield break;
+        if (gameOver){
+            yield return new WaitForSeconds(2f);
+            yield return Fade(0f, 1f, 1f);           
+            if(playerHearts <= 0)
+                SceneManager.LoadScene("WinScene", LoadSceneMode.Single);
+            SceneManager.LoadScene("LoseScene", LoadSceneMode.Single);
+        }
 
         // Reset all sushi for the new round
         foreach (var c in cups)
@@ -213,5 +225,26 @@ public class TurnGameController : MonoBehaviour
             if (c.SushiUnderCup.gameObject.activeSelf)
                 return false;
         return true;
+    }
+
+    private IEnumerator Fade(float from, float to, float duration)
+    {
+        float t = 0f;
+
+        Color c = fadeImage.color;
+
+        while (t < 1f)
+        {
+            t += Time.deltaTime / duration;
+            float a = Mathf.Lerp(from, to, fadeCurve.Evaluate(t));
+
+            c.a = a;
+            fadeImage.color = c;
+
+            yield return null;
+        }
+
+        c.a = to;
+        fadeImage.color = c;
     }
 }
