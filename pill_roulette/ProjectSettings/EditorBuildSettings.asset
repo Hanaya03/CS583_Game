@@ -6,17 +6,17 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/view1.unity
-    guid: 880605559e2b946399de8c2329d1db44
-  - enabled: 1
-    path: Assets/Scenes/DifficultySettings.unity
-    guid: b2a5fa26b594a4d4db50eda35b28c934
+    path: Assets/Scenes/SampleScene.unity
+    guid: 99c9720ab356a0642a771bea13969a05
   - enabled: 1
     path: Assets/Scenes/EnemyScene.unity
     guid: 7578e406bbbc8af43889ec52fa1623e5
   - enabled: 1
-    path: Assets/Scenes/DeathScene.unity
-    guid: b18178868ddb80f4c85cd5c81fb4d816
+    path: Assets/Scenes/LoseScene.unity
+    guid: 3ad0d0f054d815b458db186586087345
+  - enabled: 1
+    path: Assets/Scenes/WinScene.unity
+    guid: c704691e871ccd84ea0180647753ea43
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0
