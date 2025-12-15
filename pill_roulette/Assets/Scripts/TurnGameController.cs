@@ -31,6 +31,8 @@ public class TurnGameController : MonoBehaviour
     public float HOLDREVEAL => holdReveal;
     [SerializeField] private float raiseDuration = 0.35f;
     public float RAISEDURATION => raiseDuration;
+    [SerializeField] private float shuffleDuration = 1.5f;
+    [SerializeField] private int shuffleSwaps = 9; // number of swaps during shuffle
     [SerializeField] private AnimationCurve moveCurve = AnimationCurve.EaseInOut(0,0,1,1);
     public AnimationCurve MOVECURVE => moveCurve;
     [SerializeField] private AnimationCurve fadeCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
@@ -38,6 +40,23 @@ public class TurnGameController : MonoBehaviour
     [Header("Gameplay")]
     [SerializeField] private int playerHearts = 3;
     [SerializeField] private EnemyController _npc;
+
+    //adding players hearts and npc hearts to the UI
+    [Header("Gameplay")]
+    [SerializeField] private HeartUI heartUI;   
+
+    [Header("Player Audio")]
+    [SerializeField] private AudioSource playerAudioSource;
+    [SerializeField] private AudioClip playerCoughClip;
+    [SerializeField] private AudioClip playerFartClip;
+    [SerializeField, Range(0f,1f)] private float playerCoughVolume = 1f;
+    [SerializeField, Range(0f,1f)] private float playerFartVolume = 1f;
+    [SerializeField] private AudioClip playerDeathClip;
+    [SerializeField, Range(0f,1f)] private float playerDeathVolume = 1f;
+
+    [Header("Scenes")]
+    [SerializeField] private string deathSceneName = "DeathScene";
+
 
     private Cup poisonedCup;
     private bool playerTurn;
@@ -65,6 +84,12 @@ public class TurnGameController : MonoBehaviour
             Debug.LogError("TurnGameController: No cups found. Assign them in the Inspector.");
             enabled = false; return;
         }
+
+        if (heartUI != null)
+        {
+            heartUI.SetHearts(playerHearts);
+        }
+            
 
         // Cache start local Y and ensure visuals cleared
         startLocalY.Clear();
@@ -123,8 +148,11 @@ public class TurnGameController : MonoBehaviour
         yield return new WaitForSeconds(holdReveal);
         yield return poisonedCup.StartCoroutine(poisonedCup.MoveLocalY(yReveal, yStart, raiseDuration, moveCurve));
 
-        // Hide the red for the actual gameplay
+        // Hide the red for the actual gameplay before shuffling
         poisonedCup.SetPoisonVisual(false);
+
+        // Shuffle the cups so player doesn't know which is poisoned
+        yield return ShuffleCups();
 
         // Player starts each round
         playerTurn = true;
@@ -176,12 +204,32 @@ public class TurnGameController : MonoBehaviour
         if (poisoned)
         {
             playerHearts--;
+
+            //update the hearts
+            if (heartUI != null)
+            {
+                heartUI.SetHearts(playerHearts);
+            }
+
+            // Play player poison sounds (cough then fart)
+            yield return StartCoroutine(PlayPlayerPoisonSounds());
+
             Debug.Log($"<color=orange>Player ate POISON. Hearts left: {playerHearts}</color>");
 
             if (playerHearts <= 0)
             {
                 gameOver = true;
                 Debug.Log("<color=red>Player died. Game Over.</color>");
+
+                // Play death sound (if set) and immediately load death scene
+                if (playerAudioSource != null && playerDeathClip != null)
+                {
+                    playerAudioSource.clip = playerDeathClip;
+                    playerAudioSource.volume = playerDeathVolume;
+                    playerAudioSource.Play();
+                }
+
+                LoadDeathScene();
                 yield break;
             }
 
