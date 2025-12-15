@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 // If you use the old input system, remove the next line and use Input.GetMouseButtonDown(0)
 using UnityEngine.InputSystem;
 
@@ -26,12 +27,31 @@ public class TurnGameController : MonoBehaviour
     public float HOLDREVEAL => holdReveal;
     [SerializeField] private float raiseDuration = 0.35f;
     public float RAISEDURATION => raiseDuration;
+    [SerializeField] private float shuffleDuration = 1.5f;
+    [SerializeField] private int shuffleSwaps = 9; // number of swaps during shuffle
     [SerializeField] private AnimationCurve moveCurve = AnimationCurve.EaseInOut(0,0,1,1);
     public AnimationCurve MOVECURVE => moveCurve;
 
     [Header("Gameplay")]
     [SerializeField] private int playerHearts = 3;
     [SerializeField] private EnemyController _npc;
+
+    //adding players hearts and npc hearts to the UI
+    [Header("Gameplay")]
+    [SerializeField] private HeartUI heartUI;   
+
+    [Header("Player Audio")]
+    [SerializeField] private AudioSource playerAudioSource;
+    [SerializeField] private AudioClip playerCoughClip;
+    [SerializeField] private AudioClip playerFartClip;
+    [SerializeField, Range(0f,1f)] private float playerCoughVolume = 1f;
+    [SerializeField, Range(0f,1f)] private float playerFartVolume = 1f;
+    [SerializeField] private AudioClip playerDeathClip;
+    [SerializeField, Range(0f,1f)] private float playerDeathVolume = 1f;
+
+    [Header("Scenes")]
+    [SerializeField] private string deathSceneName = "DeathScene";
+
 
     private Cup poisonedCup;
     private bool playerTurn;
@@ -59,6 +79,12 @@ public class TurnGameController : MonoBehaviour
             Debug.LogError("TurnGameController: No cups found. Assign them in the Inspector.");
             enabled = false; return;
         }
+
+        if (heartUI != null)
+        {
+            heartUI.SetHearts(playerHearts);
+        }
+            
 
         // Cache start local Y and ensure visuals cleared
         startLocalY.Clear();
@@ -111,8 +137,11 @@ public class TurnGameController : MonoBehaviour
         yield return new WaitForSeconds(holdReveal);
         yield return poisonedCup.StartCoroutine(poisonedCup.MoveLocalY(yReveal, yStart, raiseDuration, moveCurve));
 
-        // Hide the red for the actual gameplay
+        // Hide the red for the actual gameplay before shuffling
         poisonedCup.SetPoisonVisual(false);
+
+        // Shuffle the cups so player doesn't know which is poisoned
+        yield return ShuffleCups();
 
         // Player starts each round
         playerTurn = true;
@@ -164,12 +193,32 @@ public class TurnGameController : MonoBehaviour
         if (poisoned)
         {
             playerHearts--;
+
+            //update the hearts
+            if (heartUI != null)
+            {
+                heartUI.SetHearts(playerHearts);
+            }
+
+            // Play player poison sounds (cough then fart)
+            yield return StartCoroutine(PlayPlayerPoisonSounds());
+
             Debug.Log($"<color=orange>Player ate POISON. Hearts left: {playerHearts}</color>");
 
             if (playerHearts <= 0)
             {
                 gameOver = true;
                 Debug.Log("<color=red>Player died. Game Over.</color>");
+
+                // Play death sound (if set) and immediately load death scene
+                if (playerAudioSource != null && playerDeathClip != null)
+                {
+                    playerAudioSource.clip = playerDeathClip;
+                    playerAudioSource.volume = playerDeathVolume;
+                    playerAudioSource.Play();
+                }
+
+                LoadDeathScene();
                 yield break;
             }
 
@@ -214,4 +263,123 @@ public class TurnGameController : MonoBehaviour
                 return false;
         return true;
     }
+
+    private IEnumerator ShuffleCups()
+{
+    if (cups == null || cups.Count < 2) yield break;
+
+    Debug.Log($"<color=magenta>===== SHUFFLE START: {cups.Count} cups, {shuffleSwaps} swaps =====</color>");
+
+    // Store all cup WORLD positions (cups may have same local but different world positions)
+    List<Vector3> cupWorldPositions = new List<Vector3>();
+    foreach (var cup in cups)
+    {
+        var worldPos = cup.transform.position;
+        cupWorldPositions.Add(worldPos);
+        Debug.Log($"Cup [{cup.name}] local position: {cup.transform.localPosition}, world position: {worldPos}");
+    }
+
+    // Check if all cups are at different world positions (using XZ plane distance, ignoring Y)
+    bool hasDifferentPositions = false;
+    for (int i = 0; i < cupWorldPositions.Count && !hasDifferentPositions; i++)
+    {
+        for (int j = i + 1; j < cupWorldPositions.Count; j++)
+        {
+            Vector2 pos1 = new Vector2(cupWorldPositions[i].x, cupWorldPositions[i].z);
+            Vector2 pos2 = new Vector2(cupWorldPositions[j].x, cupWorldPositions[j].z);
+            if (Vector2.Distance(pos1, pos2) > 0.01f)
+            {
+                hasDifferentPositions = true;
+                break;
+            }
+        }
+    }
+    
+    if (!hasDifferentPositions)
+    {
+        Debug.LogWarning("<color=yellow>Cups appear to be at the same XZ world position. Shuffle may not be visible.</color>");
+        // Continue anyway - the shuffle logic will still work
+    }
+
+    // Create a mapping: cup index -> target position index
+    int[] cupToTargetPosition = new int[cups.Count];
+    for (int i = 0; i < cups.Count; i++)
+    {
+        cupToTargetPosition[i] = i;
+    }
+
+    // Perform multiple animated swaps
+    float swapDuration = shuffleDuration / shuffleSwaps;
+    Debug.Log($"Swap duration: {swapDuration}s, Total shuffle: {shuffleDuration}s");
+    
+    for (int swap = 0; swap < shuffleSwaps; swap++)
+    {
+        // Pick two random cup indices
+        int cupIndex1 = Random.Range(0, cups.Count);
+        int cupIndex2 = Random.Range(0, cups.Count);
+        while (cupIndex2 == cupIndex1 && cups.Count > 1)
+        {
+            cupIndex2 = Random.Range(0, cups.Count);
+        }
+
+        // Swap target positions
+        int tempTarget = cupToTargetPosition[cupIndex1];
+        cupToTargetPosition[cupIndex1] = cupToTargetPosition[cupIndex2];
+        cupToTargetPosition[cupIndex2] = tempTarget;
+
+        Debug.Log($"<color=yellow>--- Swap {swap + 1}/{shuffleSwaps}: Swapping cups {cupIndex1} ↔ {cupIndex2} ---</color>");
+        
+        // Start all movements using world positions
+        for (int i = 0; i < cups.Count; i++)
+        {
+            int targetPosIndex = cupToTargetPosition[i];
+            Vector3 targetWorldPos = cupWorldPositions[targetPosIndex];
+            
+            Debug.Log($"  Cup {i} ({cups[i].name}) → world position {targetPosIndex}: {targetWorldPos} (current: {cups[i].transform.position})");
+            StartCoroutine(cups[i].MoveToWorldPosition(targetWorldPos, swapDuration, moveCurve));
+        }
+
+        // Wait for movements to complete
+        yield return new WaitForSeconds(swapDuration + 0.05f);
+    }
+    
+    Debug.Log("<color=magenta>===== SHUFFLE COMPLETE =====</color>");
+}
+
+    private IEnumerator PlayPlayerPoisonSounds()
+    {
+        if (playerAudioSource == null)
+            yield break;
+
+        // Play cough
+        if (playerCoughClip != null)
+        {
+            playerAudioSource.clip = playerCoughClip;
+            playerAudioSource.volume = playerCoughVolume;
+            playerAudioSource.Play();
+            yield return new WaitForSeconds(playerCoughClip.length);
+        }
+
+        // Play fart
+        if (playerFartClip != null)
+        {
+            playerAudioSource.clip = playerFartClip;
+            playerAudioSource.volume = playerFartVolume;
+            playerAudioSource.Play();
+            yield return new WaitForSeconds(playerFartClip.length);
+        }
+    }
+
+    private void LoadDeathScene()
+    {
+        if (!string.IsNullOrEmpty(deathSceneName))
+        {
+            SceneManager.LoadScene(deathSceneName);
+        }
+        else
+        {
+            Debug.LogError("Death scene name is not set in TurnGameController.");
+        }
+    }
+
 }
