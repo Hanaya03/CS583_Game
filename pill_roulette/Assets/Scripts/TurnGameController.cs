@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 // If you use the old input system, remove the next line and use Input.GetMouseButtonDown(0)
 using UnityEngine.InputSystem;
 
@@ -38,6 +39,18 @@ public class TurnGameController : MonoBehaviour
     //adding players hearts and npc hearts to the UI
     [Header("Gameplay")]
     [SerializeField] private HeartUI heartUI;   
+
+    [Header("Player Audio")]
+    [SerializeField] private AudioSource playerAudioSource;
+    [SerializeField] private AudioClip playerCoughClip;
+    [SerializeField] private AudioClip playerFartClip;
+    [SerializeField, Range(0f,1f)] private float playerCoughVolume = 1f;
+    [SerializeField, Range(0f,1f)] private float playerFartVolume = 1f;
+    [SerializeField] private AudioClip playerDeathClip;
+    [SerializeField, Range(0f,1f)] private float playerDeathVolume = 1f;
+
+    [Header("Scenes")]
+    [SerializeField] private string deathSceneName = "DeathScene";
 
 
     private Cup poisonedCup;
@@ -187,12 +200,25 @@ public class TurnGameController : MonoBehaviour
                 heartUI.SetHearts(playerHearts);
             }
 
+            // Play player poison sounds (cough then fart)
+            yield return StartCoroutine(PlayPlayerPoisonSounds());
+
             Debug.Log($"<color=orange>Player ate POISON. Hearts left: {playerHearts}</color>");
 
             if (playerHearts <= 0)
             {
                 gameOver = true;
                 Debug.Log("<color=red>Player died. Game Over.</color>");
+
+                // Play death sound (if set) and immediately load death scene
+                if (playerAudioSource != null && playerDeathClip != null)
+                {
+                    playerAudioSource.clip = playerDeathClip;
+                    playerAudioSource.volume = playerDeathVolume;
+                    playerAudioSource.Play();
+                }
+
+                LoadDeathScene();
                 yield break;
             }
 
@@ -319,5 +345,41 @@ public class TurnGameController : MonoBehaviour
     
     Debug.Log("<color=magenta>===== SHUFFLE COMPLETE =====</color>");
 }
+
+    private IEnumerator PlayPlayerPoisonSounds()
+    {
+        if (playerAudioSource == null)
+            yield break;
+
+        // Play cough
+        if (playerCoughClip != null)
+        {
+            playerAudioSource.clip = playerCoughClip;
+            playerAudioSource.volume = playerCoughVolume;
+            playerAudioSource.Play();
+            yield return new WaitForSeconds(playerCoughClip.length);
+        }
+
+        // Play fart
+        if (playerFartClip != null)
+        {
+            playerAudioSource.clip = playerFartClip;
+            playerAudioSource.volume = playerFartVolume;
+            playerAudioSource.Play();
+            yield return new WaitForSeconds(playerFartClip.length);
+        }
+    }
+
+    private void LoadDeathScene()
+    {
+        if (!string.IsNullOrEmpty(deathSceneName))
+        {
+            SceneManager.LoadScene(deathSceneName);
+        }
+        else
+        {
+            Debug.LogError("Death scene name is not set in TurnGameController.");
+        }
+    }
 
 }

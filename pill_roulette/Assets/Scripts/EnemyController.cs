@@ -7,7 +7,11 @@ public class EnemyController : MonoBehaviour
     [SerializeField] private Animator _animator;
     [SerializeField] private AudioClip[] _audioClips;
     [SerializeField] private AudioClip _coughClip;
+    [SerializeField, Range(0f, 1f)] private float _coughVolume = 1f;
+    [SerializeField] private AudioClip _FartClip;
+    [SerializeField, Range(0f, 1f)] private float _fartVolume = 1f;
     [SerializeField] private AudioSource _audioSource;
+    [SerializeField, Range(0f, 1f)] private float _idleClipVolume = 1f;
     [SerializeField] private TurnGameController _gameManager;
     [SerializeField] private HeartUI enemyHeartUI;
     
@@ -30,6 +34,7 @@ public class EnemyController : MonoBehaviour
         if (_isIdle)
         {
             _audioSource.clip = _audioClips[(int)Random.Range(0, 3)];
+            _audioSource.volume = _idleClipVolume;
             _audioSource.Play();
             _isIdle = false;
         }
@@ -75,8 +80,9 @@ public class EnemyController : MonoBehaviour
                 enemyHeartUI.SetHearts(_health);
             }
 
-            _audioSource.clip = _coughClip;
-            _audioSource.Play();
+            // first coughs, then fart
+            yield return StartCoroutine(PlayPoisonSounds());
+
             Debug.Log($"<color=cyan>NPC ate POISON. NPC hearts left: {_health}</color>");
 
             if (_health <= 0)
@@ -138,5 +144,26 @@ public class EnemyController : MonoBehaviour
         _animator.SetBool("Eating", false);
         _animator.SetBool("Dying", false);
         _animator.SetBool("Dead", false);
+    }
+
+    private IEnumerator PlayPoisonSounds()
+    {
+        // Play cough sound
+        if (_coughClip != null)
+        {
+            _audioSource.clip = _coughClip;
+            _audioSource.volume = _coughVolume;
+            _audioSource.Play();
+            yield return new WaitForSeconds(_coughClip.length);
+        }
+
+        // Play fart sound
+        if (_FartClip != null)
+        {
+            _audioSource.clip = _FartClip;
+            _audioSource.volume = _fartVolume;
+            _audioSource.Play();
+            yield return new WaitForSeconds(_FartClip.length);
+        }
     }
 }
