@@ -51,6 +51,7 @@ public class TurnGameController : MonoBehaviour
 
     [Header("Scenes")]
     [SerializeField] private string deathSceneName = "DeathScene";
+    [SerializeField] private string winSceneName = "WinScene";
 
 
     private Cup poisonedCup;
@@ -382,4 +383,15 @@ public class TurnGameController : MonoBehaviour
         }
     }
 
+    public void LoadWinScene()
+    {
+        if (!string.IsNullOrEmpty(winSceneName))
+        {
+            SceneManager.LoadScene(winSceneName);
+        }
+        else
+        {
+            Debug.LogError("Death scene name is not set in TurnGameController.");
+        }
+    }
 }

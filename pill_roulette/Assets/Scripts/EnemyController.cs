@@ -92,6 +92,8 @@ public class EnemyController : MonoBehaviour
                 yield return new WaitForSeconds(.5f);
                 TransitionToDead();
                 Debug.Log("<color=cyan>NPC died. YOU WIN!</color>");
+                yield return new WaitForSeconds(2f);
+                _gameManager.LoadWinScene();
                 yield break;
             }
 
