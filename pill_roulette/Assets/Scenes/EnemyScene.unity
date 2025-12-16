@@ -720,7 +720,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   sushiUnderCup: {fileID: 1571357955}
-  plate: {fileID: 498586212}
   renderersToTint: []
 --- !u!1001 &498586210
 PrefabInstance:
@@ -1504,7 +1503,6 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1554162679}
   - {fileID: 640495083}
   - {fileID: 75964162}
   m_Father: {fileID: 523283264}
@@ -1527,7 +1525,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   hearts:
-  - {fileID: 1554162681}
+  - {fileID: 0}
   - {fileID: 640495085}
   - {fileID: 75964164}
   fullHeart: {fileID: 968586668, guid: 78bf66c8b5e52764fa855beb8054a66c, type: 3}
@@ -2213,7 +2211,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   sushiUnderCup: {fileID: 1001522713}
-  plate: {fileID: 1685644714}
   renderersToTint: []
 --- !u!1 &1359044533
 GameObject:
@@ -2711,8 +2708,6 @@ MonoBehaviour:
   dropDuration: 0.35
   holdReveal: 1.2
   raiseDuration: 0.35
-  shuffleDuration: 3
-  shuffleSwaps: 10
   moveCurve:
     serializedVersion: 2
     m_Curve:
@@ -2763,15 +2758,6 @@ MonoBehaviour:
     m_RotationOrder: 4
   playerHearts: 3
   _npc: {fileID: 1925247823}
-  heartUI: {fileID: 1874169360}
-  playerAudioSource: {fileID: 1598561018}
-  playerCoughClip: {fileID: 8300000, guid: b5cac72601eb9054dbe39c05d83dd239, type: 3}
-  playerFartClip: {fileID: 8300000, guid: a189300dadec18b4da90f106b0b00ce6, type: 3}
-  playerCoughVolume: 1
-  playerFartVolume: 1
-  playerDeathClip: {fileID: 8300000, guid: f45df02c533ada94ebd714066b7db5bb, type: 3}
-  playerDeathVolume: 1
-  deathSceneName: DeathScene
 --- !u!4 &1693416603
 Transform:
   m_ObjectHideFlags: 0
@@ -3025,7 +3011,6 @@ RectTransform:
   m_Children:
   - {fileID: 891275805}
   - {fileID: 2048064202}
-  - {fileID: 1179752982}
   m_Father: {fileID: 991566537}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -3048,7 +3033,7 @@ MonoBehaviour:
   hearts:
   - {fileID: 891275807}
   - {fileID: 2048064204}
-  - {fileID: 1179752984}
+  - {fileID: 0}
   fullHeart: {fileID: 968586668, guid: 78bf66c8b5e52764fa855beb8054a66c, type: 3}
   emptyHeart: {fileID: -687513279, guid: 6de293e6a4fed7c4f9f0ef50976c280d, type: 3}
 --- !u!1 &1925247820 stripped
@@ -3079,13 +3064,8 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 40045d0cd8275894c934e4f623bc0e92, type: 3}
   - {fileID: 8300000, guid: e90dc19970c6a474aa3e111be443fd76, type: 3}
   _coughClip: {fileID: 8300000, guid: 0ac2b8a9448439648897a49d355b2960, type: 3}
-  _coughVolume: 0.368
-  _FartClip: {fileID: 8300000, guid: a189300dadec18b4da90f106b0b00ce6, type: 3}
-  _fartVolume: 1
   _audioSource: {fileID: 1925247824}
-  _idleClipVolume: 0.075
   _gameManager: {fileID: 1693416602}
-  enemyHeartUI: {fileID: 739023237}
 --- !u!82 &1925247824
 AudioSource:
   m_ObjectHideFlags: 0
@@ -3692,7 +3672,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   sushiUnderCup: {fileID: 1301570872}
-  plate: {fileID: 509917420}
   renderersToTint: []
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
@@ -3707,4 +3686,3 @@ SceneRoots:
   - {fileID: 1016322959}
   - {fileID: 991566537}
   - {fileID: 523283264}
-  - {fileID: 1568995893}
