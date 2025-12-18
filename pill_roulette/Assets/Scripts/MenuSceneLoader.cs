@@ -29,4 +29,14 @@ public class MenuSceneLoader : MonoBehaviour
     {
         Application.Quit();
     }
+
+    public void loadDifficultySelection()
+    {
+        SceneManager.LoadScene("DifficultySettings");
+    }
+
+    public void loadMainMenu()
+    {
+        SceneManager.LoadScene("view1");
+    }
 }
